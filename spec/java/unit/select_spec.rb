@@ -11,6 +11,15 @@ describe "Select Statements" do
     convert("SELECT phrases.key FROM phrases").should == "Phrase.select(Phrase.arel_table[:key])"
   end
 
+  it "works with a single non-qualified column" do
+    convert("SELECT id from phrases").should == "Phrase.select(:id)"
+  end
+
+  it "works with multiple qualified and non-qualified columns" do
+    convert("SELECT id, phrases.meta_key, key from phrases").should ==
+      "Phrase.select(:id, Phrase.arel_table[:meta_key], :key)"
+  end
+
   it "works with multiple columns" do
     convert("SELECT phrases.key, translations.text FROM phrases").should ==
       "Phrase.select(Phrase.arel_table[:key], Translation.arel_table[:text])"
