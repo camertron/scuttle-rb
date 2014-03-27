@@ -1,0 +1,6 @@
+# encoding: UTF-8
+
+require 'rubygems'
+require 'scuttle'
+
+puts Scuttle.colorize(Scuttle.beautify(Scuttle.convert(ARGV[0])))
