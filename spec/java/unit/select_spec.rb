@@ -81,4 +81,9 @@ describe "Select Statements" do
     convert("SELECT COALESCE(1, 'a', (phrases.key + 1)) AS `col`, COUNT(*), STRLEN(phrases.key), phrases.created_at FROM phrases").should ==
       "Phrase.select(Arel::Nodes::NamedFunction.new('COALESCE', [1, 'a', Arel::Nodes::Group.new(Phrase.arel_table[:key] + 1)]).as('col'), Arel.star.count, Arel::Nodes::NamedFunction.new('STRLEN', [Phrase.arel_table[:key]]), Phrase.arel_table[:created_at])"
   end
+
+  it "allows FROM clauses to contain subqueries" do
+    convert("SELECT ph.* FROM (SELECT COUNT(phrases.id) FROM phrases) ph").should ==
+      "ph = Arel::Table.new('ph')\nPhrase.select(ph[:id]).from(Phrase.select(Phrase.arel_table[:id].count).as('ph'))"
+  end
 end

@@ -13,6 +13,8 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.has_rdoc = true
 
+  s.add_dependency "coderay", "~> 1.1.0"
+
   s.require_path = 'lib'
   s.files = Dir["{lib,spec,vendor}/**/*", "Gemfile", "History.txt", "LICENSE", "README.md", "Rakefile", "scuttle.gemspec"]
 end
