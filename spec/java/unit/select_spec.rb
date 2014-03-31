@@ -84,6 +84,11 @@ describe "Select Statements" do
 
   it "allows FROM clauses to contain subqueries" do
     convert("SELECT ph.* FROM (SELECT COUNT(phrases.id) FROM phrases) ph").should ==
-      "ph = Arel::Table.new('ph')\nPhrase.select(ph[:id]).from(Phrase.select(Phrase.arel_table[:id].count).as('ph'))"
+      "ph = Arel::Table.new('ph')\nPhrase.select(ph[Arel.star]).from(Phrase.select(Phrase.arel_table[:id].count).as('ph'))"
+  end
+
+  it "works with DISTINCT queries" do
+    convert("SELECT DISTINCT id FROM phrases").should ==
+      "Phrase.select(:id).uniq"
   end
 end
