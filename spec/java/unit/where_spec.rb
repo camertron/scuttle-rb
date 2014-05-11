@@ -93,4 +93,14 @@ describe "Where Clauses" do
     convert(with_select("WHERE phrases.id IN (SELECT id FROM phrases WHERE 1)")).should ==
       with_arel_select("Phrase.arel_table[:id].in(Phrase.select(:id).where(1).ast)")
   end
+
+  it "works with a basic between statement" do
+    convert(with_select("WHERE phrases.id BETWEEN 1 and 2")).should ==
+      with_arel_select("Arel::Nodes::Between.new(Phrase.arel_table[:id], (Arel::Nodes::Group.new(1)).and(2))")
+  end
+
+  it "works with a complex between statement" do
+    convert(with_select("WHERE phrases.id BETWEEN phrases.id + 1 AND phrases.id + 2")).should ==
+      with_arel_select("Arel::Nodes::Between.new(Phrase.arel_table[:id], (Phrase.arel_table[:id] + 1).and(Phrase.arel_table[:id] + 2))")
+  end
 end
