@@ -20,11 +20,10 @@ describe "Where Clauses" do
       with_arel_select("Arel::Nodes::SqlLiteral.new('1').eq(1)")
   end
 
-  # we need better handling of non-qualified columns to make this test pass
-  it "works with a column name on the left-hand side of an expression" # do
-  #   convert(with_select("WHERE id = 1")).should ==
-  #     with_arel_select("Phrase.arel_table[:id].eq(1)")
-  # end
+  it "works with a column name on the left-hand side of an expression" do
+    convert(with_select("WHERE id = 1")).should ==
+      with_arel_select("Phrase.arel_table[:id].eq(1)")
+  end
 
   it "works with a qualified column name on the left-hand side of an expression" do
     convert(with_select("WHERE phrases.id = 1")).should ==

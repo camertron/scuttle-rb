@@ -35,13 +35,18 @@ describe "Order By Clauses" do
   end
 
   it "adds individual sort types if not all columns are the same sort type" do
-    convert(with_select("id DESC, key ASC")).should ==
-      with_arel_select(".order(Phrase.arel_table[:id].desc, :key)")
+    convert(with_select("phrases.id DESC, phrases.key ASC")).should ==
+      with_arel_select(".order(Phrase.arel_table[:id].desc, Phrase.arel_table[:key])")
   end
 
   it "works with function calls" do
     convert(with_select("STRLEN(key)")).should ==
       with_arel_select(".order(Arel::Nodes::NamedFunction.new('STRLEN', [:key]))")
+  end
+
+  it "works with aggregate function calls (value expressions)" do
+    convert(with_select("COUNT(phrases.key)")).should ==
+      with_arel_select(".order(Phrase.arel_table[:key].count)")
   end
 
   it "works with nested function calls where one is an aggregate" do
