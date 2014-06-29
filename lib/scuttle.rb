@@ -7,6 +7,8 @@ require 'java'
 require Pathname(__FILE__).dirname.dirname.join("vendor/jars/Scuttle.jar").to_s
 
 java_import 'com.camertron.Scuttle.SqlStatementVisitor'
+java_import 'com.camertron.Scuttle.Resolver.AssociationManager'
+java_import 'com.camertron.Scuttle.Resolver.AssociationType'
 java_import 'com.camertron.SQLParser.SQLLexer'
 java_import 'com.camertron.SQLParser.SQLParser'
 java_import 'org.antlr.v4.runtime.ANTLRInputStream'
@@ -18,12 +20,12 @@ module Scuttle
 
     MAX_CHARS = 50
 
-    def convert(sql_string)
+    def convert(sql_string, assoc_manager)
       input = ANTLRInputStream.new(sql_string)
       lexer = SQLLexer.new(input)
       tokens = CommonTokenStream.new(lexer)
       parser = SQLParser.new(tokens)
-      visitor = SqlStatementVisitor.new
+      visitor = SqlStatementVisitor.new(assoc_manager.createResolver)
       visitor.visit(parser.sql)
       visitor.toString
     end

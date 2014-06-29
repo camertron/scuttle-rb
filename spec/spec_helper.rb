@@ -8,6 +8,6 @@ RSpec.configure do |config|
   config.mock_with :rr
 end
 
-def convert(sql_string)
-  Scuttle.convert(sql_string)
+def convert(sql_string, assoc_manager = AssociationManager.new)
+  Scuttle.convert(sql_string, assoc_manager)
 end
