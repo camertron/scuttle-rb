@@ -28,15 +28,16 @@ describe "Join Clauses" do
 
   context "with associations defined" do
     let(:manager) do
-      manager = AssociationManager.new
-      manager.addAssociation("posts", "comments", AssociationType::HAS_MANY)
-      manager.addAssociation("posts", "favorites", AssociationType::HAS_MANY)
-      manager.addAssociation("comments", "posts", AssociationType::BELONGS_TO)
-      manager.addAssociation("comments", "authors", AssociationType::BELONGS_TO)
-      manager.addAssociation("authors", "comments", AssociationType::HAS_ONE)
-      manager.addAssociation("favorites", "posts", AssociationType::BELONGS_TO)
-      # manager.addAssociation("collab_posts", "authors", AssociationType::HAS_AND_BELONGS_TO_MANY)
-      manager
+      AssociationManager.new.tap do |manager|
+        manager.addAssociation("posts", "comments", AssociationType::HAS_MANY)
+        manager.addAssociation("posts", "favorites", AssociationType::HAS_MANY)
+        manager.addAssociation("comments", "posts", AssociationType::BELONGS_TO)
+        manager.addAssociation("comments", "authors", AssociationType::BELONGS_TO)
+        manager.addAssociation("authors", "comments", AssociationType::HAS_ONE)
+        manager.addAssociation("favorites", "posts", AssociationType::BELONGS_TO)
+        manager.addAssociation("collab_posts", "authors", AssociationType::HAS_AND_BELONGS_TO_MANY)
+        manager.addAssociation("authors", "collab_posts", AssociationType::HAS_AND_BELONGS_TO_MANY)
+      end
     end
 
     it "identifies non-nested ActiveRecord associations" do
@@ -65,8 +66,21 @@ describe "Join Clauses" do
     end
 
     it "works with has_and_belongs_to_many associations" do
-      pending
-      # convert()
+      query = "SELECT authors.* FROM authors " + 
+        "INNER JOIN authors_collab_posts ON authors_collab_posts.author_id = authors.id " +
+        "INNER JOIN collab_posts ON collab_posts.id = authors_collab_posts.collab_post_id"
+
+      convert(query, manager).should ==
+        "Author.select(Author.arel_table[Arel.star]).joins(:collab_posts)"
+    end
+
+    it "works with has_and_belongs_to_many associations in the opposite direction" do
+      query = "SELECT collab_posts.* FROM collab_posts " +
+        "INNER JOIN authors_collab_posts ON authors_collab_posts.collab_post_id = collab_posts.id " + 
+        "INNER JOIN authors ON authors.id = authors_collab_posts.author_id"
+
+      convert(query, manager).should ==
+        "CollabPost.select(CollabPost.arel_table[Arel.star]).joins(:authors)"
     end
 
     it "falls back to arel upon encountering an unsupported join type" do
@@ -77,6 +91,37 @@ describe "Join Clauses" do
     it "falls back to arel if the association can't be recognized" do
       convert(with_select("INNER JOIN comments ON comments.body = posts.id"), manager).should ==
         with_arel_select("Post.arel_table.join(Comment.arel_table).on(Comment.arel_table[:body].eq(Post.arel_table[:id])).join_sources")
+    end
+  end
+
+  context "with an association that defines a custom foreign key" do
+    let(:manager) do
+      AssociationManager.new.tap do |manager|
+        manager.addAssociation("posts", "comments", AssociationType::HAS_MANY, nil, "my_post_id")
+        manager.addAssociation("comments", "posts", AssociationType::BELONGS_TO, nil, "my_post_id")
+      end
+    end
+
+    it "identifies joins that use a custom foreign key" do
+      convert(with_select("INNER JOIN comments ON posts.id = comments.my_post_id"), manager).should ==
+        with_arel_select(":comments")
+
+      convert("SELECT * FROM comments INNER JOIN posts ON comments.my_post_id = posts.id", manager).should ==
+        "Comment.select(Arel.star).joins(:post)"
+    end
+  end
+
+  context "with an association that defines a custom association name" do
+    let(:manager) do
+      AssociationManager.new.tap do |manager|
+        manager.addAssociation("posts", "comments", AssociationType::HAS_MANY, "utterances")
+        manager.addAssociation("comments", "posts", AssociationType::BELONGS_TO)
+      end
+    end
+
+    it "uses the custom association name instead of the table name in the join" do
+      convert(with_select("INNER JOIN comments ON posts.id = comments.post_id"), manager).should ==
+        with_arel_select(":utterances")
     end
   end
 end

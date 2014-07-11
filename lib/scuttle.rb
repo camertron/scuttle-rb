@@ -16,6 +16,8 @@ java_import 'org.antlr.v4.runtime.CharStream'
 java_import 'org.antlr.v4.runtime.CommonTokenStream'
 
 module Scuttle
+  class ScuttleConversionError < StandardError; end
+
   class << self
 
     MAX_CHARS = 50
@@ -28,6 +30,8 @@ module Scuttle
       visitor = SqlStatementVisitor.new(assoc_manager.createResolver)
       visitor.visit(parser.sql)
       visitor.toString
+    rescue
+      raise ScuttleConversionError, 'Scuttle parser error, check your SQL syntax.'
     end
 
     def beautify(str)
