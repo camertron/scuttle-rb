@@ -68,6 +68,16 @@ describe "Where Clauses" do
       with_arel_select("Phrase.arel_table[:key].lteq(4)")
   end
 
+  it "works with NULL condition" do
+    convert(with_select("WHERE phrases.key IS NULL")).should ==
+      with_arel_select("Phrase.arel_table[:key].eq(nil)")
+  end
+
+  it "works with NOT NULL condition" do
+    convert(with_select("WHERE phrases.key IS NOT NULL")).should ==
+      with_arel_select("Phrase.arel_table[:key].not_eq(nil)")
+  end
+
   it "works with a basic AND" do
     convert(with_select("WHERE phrases.key = 'abc' AND phrases.id = 22")).should ==
       with_arel_select("Phrase.arel_table[:key].eq('abc').and(Phrase.arel_table[:id].eq(22))")
