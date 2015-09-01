@@ -111,9 +111,15 @@ describe "Where Clauses" do
     )
   end
 
+  it "works with a single-element IN list" do
+    expect(convert(with_select("WHERE phrases.id IN (1)"))).to eq(
+      with_arel_select("Phrase.arel_table[:id].in(1)")
+    )
+  end
+
   it "works with a simple IN list" do
     expect(convert(with_select("WHERE phrases.id IN (1, 2, 3, 4)"))).to eq(
-      with_arel_select("Phrase.arel_table[:id].in(1, 2, 3, 4)")
+      with_arel_select("Phrase.arel_table[:id].in([1, 2, 3, 4])")
     )
   end
 
@@ -132,6 +138,18 @@ describe "Where Clauses" do
   it "works with a complex between statement" do
     expect(convert(with_select("WHERE phrases.id BETWEEN phrases.id + 1 AND phrases.id + 2"))).to eq(
       with_arel_select("Arel::Nodes::Between.new(Phrase.arel_table[:id], (Phrase.arel_table[:id] + 1).and(Phrase.arel_table[:id] + 2))")
+    )
+  end
+
+  it "supports EXISTS subqueries" do
+    expect(convert(with_select("WHERE EXISTS (SELECT * FROM phrases WHERE id = 1)"))).to eq(
+      "Phrase.select(Arel.star).where(Phrase.select(Arel.star).where(Phrase.arel_table[:id].eq(1)).exists)"
+    )
+  end
+
+  it "supports HAVING clauses" do
+    expect(convert(with_select("HAVING COUNT(*) > 5"))).to eq(
+      "Phrase.select(Arel.star).having(Arel.star.count.gt(5))"
     )
   end
 end

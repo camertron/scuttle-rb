@@ -17,13 +17,13 @@ describe "Select Statements" do
 
   it "works with multiple qualified and non-qualified columns" do
     expect(convert("SELECT id, phrases.meta_key, key from phrases")).to eq(
-      "Phrase.select(:id, Phrase.arel_table[:meta_key], :key)"
+      "Phrase.select([:id, Phrase.arel_table[:meta_key], :key])"
     )
   end
 
   it "works with multiple columns" do
     expect(convert("SELECT phrases.key, translations.text FROM phrases")).to eq(
-      "Phrase.select(Phrase.arel_table[:key], Translation.arel_table[:text])"
+      "Phrase.select([Phrase.arel_table[:key], Translation.arel_table[:text]])"
     )
   end
 
@@ -91,7 +91,7 @@ describe "Select Statements" do
 
   it "works with a crazy example that ties all this together" do
     expect(convert("SELECT COALESCE(1, 'a', (phrases.key + 1)) AS `col`, COUNT(*), STRLEN(phrases.key), phrases.created_at FROM phrases")).to eq(
-      "Phrase.select(Arel::Nodes::NamedFunction.new('COALESCE', [1, 'a', Arel::Nodes::Group.new(Phrase.arel_table[:key] + 1)]).as('col'), Arel.star.count, Arel::Nodes::NamedFunction.new('STRLEN', [Phrase.arel_table[:key]]), Phrase.arel_table[:created_at])"
+      "Phrase.select([Arel::Nodes::NamedFunction.new('COALESCE', [1, 'a', Arel::Nodes::Group.new(Phrase.arel_table[:key] + 1)]).as('col'), Arel.star.count, Arel::Nodes::NamedFunction.new('STRLEN', [Phrase.arel_table[:key]]), Phrase.arel_table[:created_at]])"
     )
   end
 
@@ -104,6 +104,18 @@ describe "Select Statements" do
   it "works with DISTINCT queries" do
     expect(convert("SELECT DISTINCT id FROM phrases")).to eq(
       "Phrase.select(:id).uniq"
+    )
+  end
+
+  it "doesn't use the Arel::Nodes namespace when option is given" do
+    expect(convert("SELECT COALESCE(phrases.key, 1, 'abc') FROM phrases", use_arel_nodes_prefix: false)).to eq(
+      "Phrase.select(NamedFunction.new('COALESCE', [Phrase.arel_table[:key], 1, 'abc']))"
+    )
+  end
+
+  it "uses ArelHelpers when option is given" do
+    expect(convert("SELECT phrases.key FROM phrases", use_arel_helpers: true)).to eq(
+      "Phrase.select(Phrase[:key])"
     )
   end
 end

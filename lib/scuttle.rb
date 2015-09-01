@@ -7,6 +7,7 @@ require 'java'
 require Pathname(__FILE__).dirname.dirname.join("vendor/jars/Scuttle.jar").to_s
 
 java_import 'com.camertron.Scuttle.SqlStatementVisitor'
+java_import 'com.camertron.Scuttle.ScuttleOptions'
 java_import 'com.camertron.Scuttle.Resolver.AssociationManager'
 java_import 'com.camertron.Scuttle.Resolver.AssociationType'
 java_import 'com.camertron.SQLParser.SQLLexer'
@@ -22,15 +23,18 @@ module Scuttle
 
     MAX_CHARS = 50
 
-    def convert(sql_string, assoc_manager)
+    def convert(sql_string, options = {}, assoc_manager)
       input = ANTLRInputStream.new(sql_string)
       lexer = SQLLexer.new(input)
       tokens = CommonTokenStream.new(lexer)
       parser = SQLParser.new(tokens)
-      visitor = SqlStatementVisitor.new(assoc_manager.createResolver)
+      options = scuttle_options_from(options)
+      visitor = SqlStatementVisitor.new(assoc_manager.createResolver, options)
       visitor.visit(parser.sql)
       visitor.toString
-    rescue
+    rescue => e
+      puts e.message
+      puts e.backtrace
       raise ScuttleConversionError, 'Scuttle parser error, check your SQL syntax.'
     end
 
@@ -44,6 +48,13 @@ module Scuttle
     end
 
     private
+
+    def scuttle_options_from(options)
+      ScuttleOptions.new.tap do |scuttle_options|
+        scuttle_options.useArelHelpers(options.fetch(:use_arel_helpers, false))
+        scuttle_options.useArelNodesPrefix(options.fetch(:use_arel_nodes_prefix, true))
+      end
+    end
 
     def parse(str)
       tokens = str.split(/([\[\]()])/)

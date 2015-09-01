@@ -44,7 +44,7 @@ describe "Join Clauses" do
     end
 
     it "identifies non-nested ActiveRecord associations" do
-      expect(convert(with_select("INNER JOIN comments ON comments.post_id = posts.id"), manager)).to eq(
+      expect(convert(with_select("INNER JOIN comments ON comments.post_id = posts.id"), {}, manager)).to eq(
         with_arel_select(":comments")
       )
     end
@@ -54,7 +54,7 @@ describe "Join Clauses" do
         with_select(
           "INNER JOIN comments ON comments.post_id = posts.id " +
           "INNER JOIN authors ON authors.id = comments.author_id"
-        ), manager
+        ), {}, manager
       )).to eq(with_arel_select(":comments => :author"))
     end
 
@@ -65,39 +65,39 @@ describe "Join Clauses" do
         "INNER JOIN posts ON posts.id = comments.post_id " +
         "INNER JOIN favorites ON favorites.post_id = posts.id"
 
-      expect(convert(query, manager)).to eq(
+      expect(convert(query, {}, manager)).to eq(
         "Author.select(Arel.star).joins(:comment => { :post => :favorites })"
       )
     end
 
     it "works with has_and_belongs_to_many associations" do
-      query = "SELECT authors.* FROM authors " + 
+      query = "SELECT authors.* FROM authors " +
         "INNER JOIN authors_collab_posts ON authors_collab_posts.author_id = authors.id " +
         "INNER JOIN collab_posts ON collab_posts.id = authors_collab_posts.collab_post_id"
 
-      expect(convert(query, manager)).to eq(
+      expect(convert(query, {}, manager)).to eq(
         "Author.select(Author.arel_table[Arel.star]).joins(:collab_posts)"
       )
     end
 
     it "works with has_and_belongs_to_many associations in the opposite direction" do
       query = "SELECT collab_posts.* FROM collab_posts " +
-        "INNER JOIN authors_collab_posts ON authors_collab_posts.collab_post_id = collab_posts.id " + 
+        "INNER JOIN authors_collab_posts ON authors_collab_posts.collab_post_id = collab_posts.id " +
         "INNER JOIN authors ON authors.id = authors_collab_posts.author_id"
 
-      expect(convert(query, manager)).to eq(
+      expect(convert(query, {}, manager)).to eq(
         "CollabPost.select(CollabPost.arel_table[Arel.star]).joins(:authors)"
       )
     end
 
     it "falls back to arel upon encountering an unsupported join type" do
-      expect(convert(with_select("LEFT OUTER JOIN comments ON comments.post_id = posts.id"), manager)).to eq(
+      expect(convert(with_select("LEFT OUTER JOIN comments ON comments.post_id = posts.id"), {}, manager)).to eq(
         with_arel_select("Post.arel_table.join(Comment.arel_table, Arel::Nodes::OuterJoin).on(Comment.arel_table[:post_id].eq(Post.arel_table[:id])).join_sources")
       )
     end
 
     it "falls back to arel if the association can't be recognized" do
-      expect(convert(with_select("INNER JOIN comments ON comments.body = posts.id"), manager)).to eq(
+      expect(convert(with_select("INNER JOIN comments ON comments.body = posts.id"), {}, manager)).to eq(
         with_arel_select("Post.arel_table.join(Comment.arel_table).on(Comment.arel_table[:body].eq(Post.arel_table[:id])).join_sources")
       )
     end
@@ -112,11 +112,11 @@ describe "Join Clauses" do
     end
 
     it "identifies joins that use a custom foreign key" do
-      expect(convert(with_select("INNER JOIN comments ON posts.id = comments.my_post_id"), manager)).to eq(
+      expect(convert(with_select("INNER JOIN comments ON posts.id = comments.my_post_id"), {}, manager)).to eq(
         with_arel_select(":comments")
       )
 
-      expect(convert("SELECT * FROM comments INNER JOIN posts ON comments.my_post_id = posts.id", manager)).to eq(
+      expect(convert("SELECT * FROM comments INNER JOIN posts ON comments.my_post_id = posts.id", {}, manager)).to eq(
         "Comment.select(Arel.star).joins(:post)"
       )
     end
@@ -131,7 +131,7 @@ describe "Join Clauses" do
     end
 
     it "uses the custom association name instead of the table name in the join" do
-      expect(convert(with_select("INNER JOIN comments ON posts.id = comments.post_id"), manager)).to eq(
+      expect(convert(with_select("INNER JOIN comments ON posts.id = comments.post_id"), {}, manager)).to eq(
         with_arel_select(":utterances")
       )
     end
