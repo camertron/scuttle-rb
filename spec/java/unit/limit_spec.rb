@@ -12,12 +12,14 @@ describe "Order By Clauses" do
   end
 
   it "works with a common numerical select" do
-    convert(with_limit("1")).should ==
+    expect(convert(with_limit("1"))).to eq(
       with_arel_limit(".limit(1)")
+    )
   end
 
   it "works with an expression" do
-    convert(with_limit("COUNT(phrases.id)")).should ==
+    expect(convert(with_limit("COUNT(phrases.id)"))).to eq(
       with_arel_limit(".limit(Phrase.arel_table[:id].count)")
+    )
   end
 end

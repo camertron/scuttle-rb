@@ -12,25 +12,28 @@ describe "Order By Clauses" do
   end
 
   it "works with a single column" do
-    convert(with_select("id")).should == with_arel_select(":id")
+    expect(convert(with_select("id"))).to eq(with_arel_select(":id"))
   end
 
   it "works with multiple columns" do
-    convert(with_select("id, key")).should == with_arel_select(":id, :key")
+    expect(convert(with_select("id, key"))).to eq(with_arel_select(":id, :key"))
   end
 
   it "works with a function call" do
-    convert(with_select("STRLEN(key)")).should ==
+    expect(convert(with_select("STRLEN(key)"))).to eq(
       with_arel_select("Arel::Nodes::NamedFunction.new('STRLEN', [:key])")
+    )
   end
 
   it "works with nested function calls where one is an aggregate" do
-    convert(with_select("STRLEN(COUNT(phrases.key))")).should ==
+    expect(convert(with_select("STRLEN(COUNT(phrases.key))"))).to eq(
       with_arel_select("Arel::Nodes::NamedFunction.new('STRLEN', [Phrase.arel_table[:key].count])")
+    )
   end
 
   it "works with nested function calls" do
-    convert(with_select("COALESCE(STRLEN(), 'abc')")).should ==
+    expect(convert(with_select("COALESCE(STRLEN(), 'abc')"))).to eq(
       with_arel_select("Arel::Nodes::NamedFunction.new('COALESCE', [Arel::Nodes::NamedFunction.new('STRLEN', []), 'abc'])")
+    )
   end
 end
