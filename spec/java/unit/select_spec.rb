@@ -118,4 +118,9 @@ describe "Select Statements" do
       "Phrase.select(Phrase[:key])"
     )
   end
+
+  it "handles SQL CASE statements" do
+    result = convert("SELECT sum(CASE WHEN phrases.translated THEN 1 ELSE 0 END) total_translated FROM phrases")
+    expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('sum', [Arel.sql('CASE WHEN phrases.translated THEN 1 ELSE 0 END')]).as('total_translated'))")
+  end
 end
