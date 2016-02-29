@@ -3,4 +3,5 @@
 require 'rubygems'
 require 'scuttle'
 
-puts Scuttle.colorize(Scuttle.beautify(Scuttle.convert(ARGV[0])))
+assoc_manager = AssociationManager.new
+puts Scuttle.colorize(Scuttle.beautify(Scuttle.convert(ARGV[0], assoc_manager)))
