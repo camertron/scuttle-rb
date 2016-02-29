@@ -4,7 +4,7 @@ gemspec
 
 group :development do
   gem "pry-nav"
-  gem "activerecord", "~> 4.0.0"
+  gem "activerecord", "~> 4.0"
   gem "coderay", "~> 1.1.0"
 end
 
