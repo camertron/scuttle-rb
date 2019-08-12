@@ -120,7 +120,22 @@ describe "Select Statements" do
   end
 
   it "handles SQL CASE statements" do
-    result = convert("SELECT sum(CASE WHEN phrases.translated THEN 1 ELSE 0 END) total_translated FROM phrases")
-    expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('sum', [Arel.sql('CASE WHEN phrases.translated THEN 1 ELSE 0 END')]).as('total_translated'))")
+    result = convert("SELECT SUM(CASE WHEN phrases.translated THEN 1 ELSE 0 END) total_translated FROM phrases")
+    expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('SUM', [Arel.sql('CASE WHEN phrases.translated THEN 1 ELSE 0 END')]).as('total_translated'))")
+  end
+
+  context "window functions (OVER)" do
+    it "works with ROW_NUMBER()" do
+      result = convert("SELECT row_number() OVER () AS id, COUNT(*) as count FROM translations GROUP BY translations.phrase_id")
+      expect(result).to eq("Translation.select([Arel::Nodes::NamedFunction.new('ROW_NUMBER', []).over.as('id'), Arel.star.count.as('count')]).group(Translation.arel_table[:phrase_id])")
+    end
+
+    it "works with other aggregate functions" do
+      result = convert("SELECT avg(foo) OVER () as bar FROM translations")
+      expect(result).to eq("Translation.select(Translation.arel_table[:foo].average.over.as('bar'))")
+
+      result = convert("SELECT sum(translations.foo) OVER () as bar FROM translations")
+      expect(result).to eq("Translation.select(Arel::Nodes::NamedFunction.new('SUM', [Translation.arel_table[:foo]]).over.as('bar'))")
+    end
   end
 end
