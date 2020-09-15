@@ -123,8 +123,15 @@ describe "Where Clauses" do
     )
   end
 
-  it "works with an IN that contains a select statement" do
+  it "works with an IN that contains a select statement (rails >= 6.0)" do
     expect(convert(with_select("WHERE phrases.id IN (SELECT id FROM phrases WHERE 1)"))).to eq(
+      with_arel_select("Phrase.arel_table[:id].in(Phrase.select(:id).where(1))")
+    )
+  end
+
+  it "works with an IN that contains a select statement (rails < 6.0)" do
+    stmt = convert(with_select("WHERE phrases.id IN (SELECT id FROM phrases WHERE 1)"), use_rails_version: '5.2.1')
+    expect(stmt).to eq(
       with_arel_select("Phrase.arel_table[:id].in(Phrase.select(:id).where(1).ast)")
     )
   end

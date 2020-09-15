@@ -53,6 +53,7 @@ module Scuttle
       ScuttleOptions.new.tap do |scuttle_options|
         scuttle_options.useArelHelpers(options.fetch(:use_arel_helpers, false))
         scuttle_options.useArelNodesPrefix(options.fetch(:use_arel_nodes_prefix, true))
+        scuttle_options.useRailsVersion(options.fetch(:use_rails_version, '6.0.0'))
       end
     end
 

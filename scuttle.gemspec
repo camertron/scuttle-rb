@@ -9,10 +9,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/camertron"
 
   s.description = s.summary = "A library for transforming raw SQL statements into ActiveRecord/Arel queries. Ruby wrapper and tests for scuttle-java."
-
   s.platform = Gem::Platform::RUBY
-  s.has_rdoc = true
-
   s.add_dependency "coderay", "~> 1.1.0"
 
   s.require_path = 'lib'
