@@ -119,9 +119,24 @@ describe "Select Statements" do
     )
   end
 
-  it "handles SQL CASE statements" do
-    result = convert("SELECT SUM(CASE WHEN phrases.translated THEN 1 ELSE 0 END) total_translated FROM phrases")
+  it "handles simple SQL CASE statements (rails < 5)" do
+    result = convert("SELECT SUM(CASE phrases.id WHEN 10 THEN 1 ELSE 0 END) whatever FROM phrases", use_rails_version: '4.2.0')
+    expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('SUM', [Arel.sql('CASE phrases.id WHEN 10 THEN 1 ELSE 0 END')]).as('whatever'))")
+  end
+
+  it "handles searched SQL CASE statements (rails < 5)" do
+    result = convert("SELECT SUM(CASE WHEN phrases.translated THEN 1 ELSE 0 END) total_translated FROM phrases", use_rails_version: '4.2.0')
     expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('SUM', [Arel.sql('CASE WHEN phrases.translated THEN 1 ELSE 0 END')]).as('total_translated'))")
+  end
+
+  it "handles searched SQL CASE statements (rails >= 5)" do
+    result = convert("SELECT SUM(CASE phrases.id WHEN 10 THEN 1 ELSE 0 END) total_translated FROM phrases", use_rails_version: '5.0.0')
+    expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('SUM', [Arel::Nodes::Case.new(Phrase.arel_table[:id]).when(10).then(1).else(0)]).as('total_translated'))")
+  end
+
+  it "handles searched SQL CASE statements (rails >= 5)" do
+    result = convert("SELECT SUM(CASE WHEN phrases.translated THEN 1 ELSE 0 END) total_translated FROM phrases", use_rails_version: '5.0.0')
+    expect(result).to eq("Phrase.select(Arel::Nodes::NamedFunction.new('SUM', [Arel::Nodes::Case.new.when(Phrase.arel_table[:translated]).then(1).else(0)]).as('total_translated'))")
   end
 
   context "window functions (OVER)" do
