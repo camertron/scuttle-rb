@@ -159,4 +159,10 @@ describe "Where Clauses" do
       "Phrase.select(Arel.star).having(Arel.star.count.gt(5))"
     )
   end
+
+  it "supports boolean IS expressions" do
+    expect(convert(with_select("WHERE phrases.active IS TRUE"))).to eq(
+      "Phrase.select(Arel.star).where(Phrase.arel_table[:active].eq(true))"
+    )
+  end
 end
