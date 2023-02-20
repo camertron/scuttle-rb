@@ -102,8 +102,12 @@ describe "Select Statements" do
   end
 
   it "works with DISTINCT queries" do
-    expect(convert("SELECT DISTINCT id FROM phrases")).to eq(
+    expect(convert("SELECT DISTINCT id FROM phrases", use_rails_version: "3.2.0")).to eq(
       "Phrase.select(:id).uniq"
+    )
+
+    expect(convert("SELECT DISTINCT id FROM phrases", use_rails_version: "4.0.0")).to eq(
+      "Phrase.select(:id).distinct"
     )
   end
 
