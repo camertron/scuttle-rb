@@ -17,7 +17,7 @@ describe "Where Clauses" do
 
   it "wraps literals that are the first operands in an expression" do
     expect(convert(with_select("WHERE 1 = 1"))).to eq(
-      with_arel_select("Arel::Nodes::SqlLiteral.new('1').eq(1)")
+      with_arel_select("Arel::Nodes::InfixOperation.new('=', 1, 1)")
     )
   end
 
@@ -35,7 +35,7 @@ describe "Where Clauses" do
 
   it "works with a column name on the right-hand side of an expression" do
     expect(convert(with_select("WHERE 1 = phrases.id"))).to eq(
-      with_arel_select("Arel::Nodes::SqlLiteral.new('1').eq(Phrase.arel_table[:id])")
+      with_arel_select("Arel::Nodes::InfixOperation.new('=', 1, Phrase.arel_table[:id])")
     )
   end
 
@@ -138,7 +138,7 @@ describe "Where Clauses" do
 
   it "works with a basic between statement" do
     expect(convert(with_select("WHERE phrases.id BETWEEN 1 and 2"))).to eq(
-      with_arel_select("Arel::Nodes::Between.new(Phrase.arel_table[:id], (Arel::Nodes::Group.new(1)).and(2))")
+      with_arel_select("Arel::Nodes::Between.new(Phrase.arel_table[:id], Arel::Nodes::And.new([1, 2]))")
     )
   end
 
